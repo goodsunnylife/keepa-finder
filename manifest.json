@@ -1,0 +1,9 @@
+{
+  "name": "Keepa Finder",
+  "short_name": "Keepa Finder",
+  "start_url": "./",
+  "scope": "./",
+  "display": "browser",
+  "background_color": "#f5f6f8",
+  "theme_color": "#1f6feb"
+}
