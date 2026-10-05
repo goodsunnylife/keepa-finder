@@ -239,7 +239,9 @@ $('form').addEventListener('submit', e => {
   lsSet(LS_LAST, preset.id);
   const { url, warnings } = KeepaUrl.build(preset.selection, { releaseDateAfter: dateFromEl.value, releaseDateBefore: dateEl.value });
   if (warnings.length) showMsg(warnings.join(' / '), true);
-  location.href = url; // standalone PWA on iOS hands external URLs to Safari
+  // Open in a new tab; fall back to this tab if the popup is blocked.
+  const w = window.open(url, '_blank', 'noopener');
+  if (!w) location.href = url;
 });
 
 $('today').addEventListener('click', () => { dateFromEl.value = isoDate(new Date()); });
