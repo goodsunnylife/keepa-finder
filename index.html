@@ -87,6 +87,20 @@ const BUILTIN_PRESETS = [
       sort: [['current_SALES', 'asc'], ['monthlySold', 'desc']],
       perPage: 100, page: 0
     }
+  },
+  {
+    id: 'amazon-out-offers-up',
+    name: 'Amazon枯れ、出品者20%減',
+    selection: {
+      current_SALES_gte: 1, current_SALES_lte: 30000,
+      current_AMAZON_gte: -1, current_AMAZON_lte: -1,
+      current_NEW_gte: 2000,
+      deltaPercent30_COUNT_NEW_gte: 20,
+      rootCategory: ['13299531'],
+      productType: ['0'],
+      sort: [['current_SALES', 'asc']],
+      perPage: 100, page: 0
+    }
   }
 ];
 
