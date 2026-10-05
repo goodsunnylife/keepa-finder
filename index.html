@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Keepa Finder</title>
-<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Keepa Finder">
 <meta name="theme-color" content="#1f6feb">
@@ -239,7 +238,7 @@ $('form').addEventListener('submit', e => {
   lsSet(LS_LAST, preset.id);
   const { url, warnings } = KeepaUrl.build(preset.selection, { releaseDateAfter: dateFromEl.value, releaseDateBefore: dateEl.value });
   if (warnings.length) showMsg(warnings.join(' / '), true);
-  openExternal(url);
+  openTab(url);
 });
 
 // Chrome returns null from window.open when "noopener" is passed, so a
@@ -248,22 +247,6 @@ function openTab(url) {
   const a = document.createElement('a');
   a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
   document.body.appendChild(a); a.click(); a.remove();
-}
-
-// iOS standalone PWAs open target="_blank" in an in-app view. The
-// x-safari-https scheme hands the URL to the Safari app instead; if the app
-// stays in the foreground the scheme was ignored, so fall back to a new tab.
-function openExternal(url) {
-  if (window.navigator.standalone !== true) return openTab(url);
-  let left = false;
-  const onHide = () => { if (document.hidden) left = true; };
-  document.addEventListener('visibilitychange', onHide);
-  location.href = url.replace(/^https:\/\//, 'x-safari-https://');
-  setTimeout(() => {
-    document.removeEventListener('visibilitychange', onHide);
-    if (left || document.hidden) return;
-    openTab(url);
-  }, 1200);
 }
 
 $('today').addEventListener('click', () => { dateFromEl.value = isoDate(new Date()); });
@@ -293,7 +276,7 @@ $('add').addEventListener('click', () => {
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('K', 90, 96);
   const icon = c.toDataURL('image/png');
   $('icon').href = icon;
-  const manifest = { name: 'Keepa Finder', short_name: 'Keepa Finder', start_url: location.pathname, scope: location.pathname.replace(/[^/]*$/, ''), display: 'standalone', background_color: '#f5f6f8', theme_color: '#1f6feb', icons: [{ src: icon, sizes: '180x180', type: 'image/png' }] };
+  const manifest = { name: 'Keepa Finder', short_name: 'Keepa Finder', start_url: location.pathname, scope: location.pathname.replace(/[^/]*$/, ''), display: 'browser', background_color: '#f5f6f8', theme_color: '#1f6feb', icons: [{ src: icon, sizes: '180x180', type: 'image/png' }] };
   $('manifest').href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
 })();
 
