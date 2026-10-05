@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Keepa Finder">
 <meta name="theme-color" content="#1f6feb">
 <link id="icon" rel="apple-touch-icon" href="">
-<link id="manifest" rel="manifest" href="">
+<link rel="manifest" href="manifest.json">
 <style>
 :root { --bg:#f5f6f8; --card:#fff; --text:#1c1e21; --muted:#6b7280; --accent:#1f6feb; --border:#e3e5e8; --danger:#b42318; color-scheme: light dark; }
 @media (prefers-color-scheme: dark) { :root { --bg:#111418; --card:#1b2026; --text:#e8eaed; --muted:#9aa3ad; --border:#2a3139; } }
@@ -269,7 +269,8 @@ $('add').addEventListener('click', () => {
   showMsg(`「${name}」を追加しました`);
 });
 
-// Icon + manifest generated at runtime (no static base64 to mistype).
+// Tab icon generated at runtime (no static base64 to mistype); the manifest
+// is a real file so iOS reads its "display": "browser".
 (function setupPwa() {
   const c = document.createElement('canvas'); c.width = c.height = 180;
   const g = c.getContext('2d');
@@ -278,8 +279,6 @@ $('add').addEventListener('click', () => {
   g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('K', 90, 96);
   const icon = c.toDataURL('image/png');
   $('icon').href = icon;
-  const manifest = { name: 'Keepa Finder', short_name: 'Keepa Finder', start_url: location.pathname, scope: location.pathname.replace(/[^/]*$/, ''), display: 'browser', background_color: '#f5f6f8', theme_color: '#1f6feb', icons: [{ src: icon, sizes: '180x180', type: 'image/png' }] };
-  $('manifest').href = 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest));
 })();
 
 const d = new Date(); d.setDate(d.getDate() - DEFAULT_DAYS_BACK); dateEl.value = isoDate(d);
