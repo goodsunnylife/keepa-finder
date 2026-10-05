@@ -32,6 +32,8 @@ button.danger { background:transparent; color:var(--danger); border:1px solid va
 .msg { margin:0; font-size:14px; }
 .msg.error { color:var(--danger); }
 details summary { cursor:pointer; color:var(--muted); font-size:14px; }
+.date-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; }
+.date-row button { width:auto; min-height:44px; padding:0 14px; white-space:nowrap; }
 .row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:center; }
 .row .btns { display:flex; gap:6px; }
 .row button { width:auto; min-height:40px; padding:8px 12px; }
@@ -43,8 +45,11 @@ details summary { cursor:pointer; color:var(--muted); font-size:14px; }
 <main>
   <form id="form" class="panel">
     <label><span>プリセット</span><select id="preset" required></select></label>
-    <label><span>発売日がこの日まで</span>
-      <input type="date" id="date" required>
+    <label><span>発売日がこの日から（空＝指定なし）</span>
+      <div class="date-row"><input type="date" id="dateFrom"><button id="today" type="button" class="secondary">今日</button></div>
+    </label>
+    <label><span>発売日がこの日まで（空＝指定なし）</span>
+      <div class="date-row"><input type="date" id="date"><button id="clearTo" type="button" class="secondary">空にする</button></div>
     </label>
     <button id="run" type="submit">Keepaで開く</button>
     <p id="msg" class="msg" hidden></p>
@@ -140,8 +145,13 @@ const KeepaUrl = (() => {
       if (typeof v === 'string' || typeof v === 'number') { f[key] = { filter: String(v), type: 'isOneOf' }; continue; }
       warnings.push(`未対応の条件: ${key}`);
     }
-    if (overrides.releaseDateBefore) {
-      ranges.releaseDate = { lte: overrides.releaseDateBefore };
+    // The date fields drive releaseDate; either bound may be left empty.
+    if (overrides.releaseDateAfter || overrides.releaseDateBefore) {
+      ranges.releaseDate = {};
+      if (overrides.releaseDateAfter) ranges.releaseDate.gte = overrides.releaseDateAfter;
+      if (overrides.releaseDateBefore) ranges.releaseDate.lte = overrides.releaseDateBefore;
+    } else {
+      delete ranges.releaseDate;
     }
     for (const base of Object.keys(ranges)) {
       const { gte, lte } = ranges[base];
@@ -171,7 +181,7 @@ const KeepaUrl = (() => {
 
 // ---- App ----
 const $ = id => document.getElementById(id);
-const presetEl = $('preset'), dateEl = $('date'), msgEl = $('msg');
+const presetEl = $('preset'), dateEl = $('date'), dateFromEl = $('dateFrom'), msgEl = $('msg');
 const DEFAULT_DAYS_BACK = 547; // 1年半
 const LS_PRESETS = 'userPresets', LS_LAST = 'lastPreset', LS_NAMES = 'presetNames'; // LS_NAMES: renamed built-ins {id: name}
 
@@ -224,12 +234,16 @@ function renderPresets() {
 $('form').addEventListener('submit', e => {
   e.preventDefault(); showMsg('');
   const preset = allPresets().find(p => p.id === presetEl.value);
-  if (!preset || !dateEl.value) return showMsg('プリセットと日付を選んでください', true);
+  if (!preset) return showMsg('プリセットを選んでください', true);
+  if (dateFromEl.value && dateEl.value && dateFromEl.value > dateEl.value) return showMsg('発売日の範囲が逆です', true);
   lsSet(LS_LAST, preset.id);
-  const { url, warnings } = KeepaUrl.build(preset.selection, { releaseDateBefore: dateEl.value });
+  const { url, warnings } = KeepaUrl.build(preset.selection, { releaseDateAfter: dateFromEl.value, releaseDateBefore: dateEl.value });
   if (warnings.length) showMsg(warnings.join(' / '), true);
   location.href = url; // standalone PWA on iOS hands external URLs to Safari
 });
+
+$('today').addEventListener('click', () => { dateFromEl.value = isoDate(new Date()); });
+$('clearTo').addEventListener('click', () => { dateEl.value = ''; });
 
 $('add').addEventListener('click', () => {
   const name = $('newName').value.trim(), raw = $('newJson').value.trim();
