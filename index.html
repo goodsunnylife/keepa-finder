@@ -239,10 +239,32 @@ $('form').addEventListener('submit', e => {
   lsSet(LS_LAST, preset.id);
   const { url, warnings } = KeepaUrl.build(preset.selection, { releaseDateAfter: dateFromEl.value, releaseDateBefore: dateEl.value });
   if (warnings.length) showMsg(warnings.join(' / '), true);
-  // Open in a new tab; fall back to this tab if the popup is blocked.
-  const w = window.open(url, '_blank', 'noopener');
-  if (!w) location.href = url;
+  openExternal(url);
 });
+
+// Chrome returns null from window.open when "noopener" is passed, so a
+// null check there also navigated this tab. Click a real link instead.
+function openTab(url) {
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+// iOS standalone PWAs open target="_blank" in an in-app view. The
+// x-safari-https scheme hands the URL to the Safari app instead; if the app
+// stays in the foreground the scheme was ignored, so fall back to a new tab.
+function openExternal(url) {
+  if (window.navigator.standalone !== true) return openTab(url);
+  let left = false;
+  const onHide = () => { if (document.hidden) left = true; };
+  document.addEventListener('visibilitychange', onHide);
+  location.href = url.replace(/^https:\/\//, 'x-safari-https://');
+  setTimeout(() => {
+    document.removeEventListener('visibilitychange', onHide);
+    if (left || document.hidden) return;
+    openTab(url);
+  }, 1200);
+}
 
 $('today').addEventListener('click', () => { dateFromEl.value = isoDate(new Date()); });
 $('clearTo').addEventListener('click', () => { dateEl.value = ''; });
